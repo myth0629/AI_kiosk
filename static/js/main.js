@@ -8,55 +8,16 @@ let selectedMood = null;
 
 // ===== 초기화 =====
 document.addEventListener('DOMContentLoaded', function () {
-    initParticles();
-    initModeSelector();
+    // initParticles(); // Removing particles for now as they might conflict with new design or add back if needed
+    // initModeSelector(); // Removed mode selector
     loadQuickList('bestseller');
 });
-
-// ===== 파티클 배경 애니메이션 =====
-function initParticles() {
-    const container = document.getElementById('particles');
-    const particleCount = 30;
-
-    for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.animationDelay = Math.random() * 15 + 's';
-        particle.style.animationDuration = (15 + Math.random() * 10) + 's';
-        container.appendChild(particle);
-    }
-}
-
-// ===== 모드 선택기 =====
-function initModeSelector() {
-    const buttons = document.querySelectorAll('.mode-btn');
-    buttons.forEach(btn => {
-        btn.addEventListener('click', function () {
-            const mode = this.dataset.mode;
-            switchMode(mode);
-        });
-    });
-}
-
-function switchMode(mode) {
-    // 버튼 활성화 상태 변경
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.mode === mode);
-    });
-
-    // 패널 표시 전환
-    document.querySelectorAll('.panel').forEach(panel => {
-        panel.classList.remove('active');
-    });
-    document.getElementById(`panel-${mode}`).classList.add('active');
-}
 
 // ===== 맞춤 추천 =====
 async function getRecommendation() {
     const interests = document.getElementById('interests').value.trim();
     const purpose = document.getElementById('purpose').value;
-    const category = document.getElementById('category').value;
+    const category = ''; // Removed category select for simplicity as per UI
 
     if (!interests) {
         alert('관심 분야 또는 키워드를 입력해주세요!');
@@ -69,7 +30,7 @@ async function getRecommendation() {
         const response = await fetch('/api/recommend', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ interests, purpose, category })
+            body: JSON.stringify({ interests, purpose })
         });
 
         const data = await response.json();
@@ -171,10 +132,9 @@ function addChatMessage(type, content) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message ${type}`;
 
-    const avatar = type === 'bot' ? '📚' : '👤';
+    // const avatar = type === 'bot' ? '📚' : '👤'; // Removed avatar for cleaner look
 
     messageDiv.innerHTML = `
-        <div class="message-avatar">${avatar}</div>
         <div class="message-content">${content}</div>
     `;
 
@@ -191,7 +151,7 @@ function displayChatResponse(data) {
         data.recommendations.forEach((book, idx) => {
             content += `<br>${idx + 1}. <strong>${book.title}</strong>`;
             if (book.author) content += ` - ${book.author}`;
-            if (book.reason) content += `<br><em style="color: rgba(255,255,255,0.7);">${book.reason}</em>`;
+            // if (book.reason) content += `<br><em style="color: rgba(255,255,255,0.7);">${book.reason}</em>`;
         });
     }
 
@@ -202,11 +162,14 @@ function displayChatResponse(data) {
         const container = document.getElementById('chat-messages');
         const followupDiv = document.createElement('div');
         followupDiv.className = 'followup-questions';
-        followupDiv.style.marginLeft = '56px';
+        followupDiv.style.marginLeft = '10px';
+        followupDiv.style.marginTop = '10px';
 
         data.followup_questions.forEach(q => {
             const btn = document.createElement('button');
-            btn.className = 'followup-btn';
+            btn.className = 'category-pill'; // Reuse pill style
+            btn.style.fontSize = '12px';
+            btn.style.padding = '8px 12px';
             btn.textContent = q;
             btn.onclick = function () {
                 document.getElementById('chat-input').value = q;
@@ -305,32 +268,20 @@ function hideLoading(panel) {
 function showError(panel, message) {
     const container = document.getElementById(`results-${panel}`);
     container.innerHTML = `
-        <div class="glass-card text-center">
+        <div class="text-center" style="padding: 40px;">
             <p style="font-size: 48px; margin-bottom: 16px;">😢</p>
-            <p style="color: var(--text-secondary);">${message}</p>
+            <p style="color: var(--text-gray);">${message}</p>
         </div>
     `;
 }
 
 function displayRecommendations(panel, data) {
     const container = document.getElementById(`results-${panel}`);
-
     let html = '';
 
-    // 큐레이터 코멘트
+    // 큐레이터 코멘트 (Optional)
     if (data.curator_comment) {
-        html += `
-            <div class="curator-comment">
-                <div class="curator-header">
-                    <div class="curator-avatar">📚</div>
-                    <div>
-                        <div class="curator-name">책누리</div>
-                        <div class="curator-role">AI 큐레이터</div>
-                    </div>
-                </div>
-                <div class="curator-message">${data.curator_comment}</div>
-            </div>
-        `;
+        // Simplified
     }
 
     // 추천 도서 카드
@@ -347,29 +298,8 @@ function displayRecommendations(panel, data) {
 
 function displayMoodRecommendations(data) {
     const container = document.getElementById('results-mood');
-
     let html = '';
 
-    // 기분 분석 + 응원 메시지
-    if (data.mood_analysis || data.encouragement) {
-        html += `
-            <div class="curator-comment">
-                <div class="curator-header">
-                    <div class="curator-avatar">💝</div>
-                    <div>
-                        <div class="curator-name">책누리</div>
-                        <div class="curator-role">마음 읽는 AI 사서</div>
-                    </div>
-                </div>
-                <div class="curator-message">
-                    ${data.mood_analysis ? `<p>${data.mood_analysis}</p><br>` : ''}
-                    ${data.encouragement ? `<p><em>${data.encouragement}</em></p>` : ''}
-                </div>
-            </div>
-        `;
-    }
-
-    // 추천 도서
     if (data.recommendations && data.recommendations.length > 0) {
         html += '<div class="books-grid">';
         data.recommendations.forEach(book => {
@@ -383,22 +313,21 @@ function displayMoodRecommendations(data) {
 
 function displaySearchResults(data) {
     const container = document.getElementById('results-search');
-
     const items = data.item || [];
 
     if (items.length === 0) {
         container.innerHTML = `
-            <div class="glass-card text-center">
+            <div class="text-center" style="padding: 40px;">
                 <p style="font-size: 48px; margin-bottom: 16px;">📭</p>
-                <p style="color: var(--text-secondary);">검색 결과가 없습니다.</p>
+                <p style="color: var(--text-gray);">검색 결과가 없습니다.</p>
             </div>
         `;
         return;
     }
 
     let html = `
-        <div class="search-results-header">
-            <span class="results-count">총 ${data.totalResults || items.length}권의 도서를 찾았습니다</span>
+        <div class="search-results-header" style="margin-bottom: 20px; color: #888;">
+            <span class="results-count">총 ${data.totalResults || items.length}권</span>
         </div>
         <div class="books-grid">
     `;
@@ -414,54 +343,55 @@ function displaySearchResults(data) {
 function createBookCard(book, showQuote = false) {
     const coverHtml = book.cover
         ? `<img src="${book.cover}" alt="${book.title}" loading="lazy">`
-        : `<div class="book-cover-placeholder">📖</div>`;
+        : `<div class="book-cover-placeholder" style="background:linear-gradient(45deg, #333, #555); height:100%; display:flex; align-items:center; justify-content:center;">📖</div>`;
 
     return `
         <div class="book-card">
-            <div class="book-card-inner">
-                <div class="book-cover">${coverHtml}</div>
-                <div class="book-info">
-                    <h3 class="book-title">${book.title}</h3>
-                    <p class="book-author">${book.author || '저자 미상'}</p>
-                    <p class="book-reason">${book.reason || ''}</p>
-                    ${book.highlight ? `<span class="book-highlight">${book.highlight}</span>` : ''}
-                    ${showQuote && book.quote ? `<p class="book-reason" style="font-style: italic; margin-top: 8px;">"${book.quote}"</p>` : ''}
-                </div>
+            <div class="book-cover">${coverHtml}</div>
+            <div class="book-info">
+                <h3 class="book-title">${book.title}</h3>
+                <p class="book-author">${book.author || '저자 미상'}</p>
             </div>
-            ${book.publisher || book.link ? `
-            <div class="book-meta">
-                <span class="book-publisher">${book.publisher || ''}</span>
-                ${book.link ? `<a href="${book.link}" target="_blank" class="book-link">자세히 보기 →</a>` : ''}
-            </div>
-            ` : ''}
+            ${book.link ? `<a href="${book.link}" target="_blank" style="display:block; margin-top:10px; color:#0066ff; text-decoration:none; font-size:14px;">자세히 보기 →</a>` : ''}
         </div>
     `;
 }
 
 function createSearchBookCard(book) {
-    const coverHtml = book.cover
-        ? `<img src="${book.cover}" alt="${book.title}" loading="lazy">`
-        : `<div class="book-cover-placeholder">📖</div>`;
+    return createBookCard(book);
+}
 
-    const description = book.description
-        ? (book.description.length > 100 ? book.description.substring(0, 100) + '...' : book.description)
-        : '';
+// ===== Navigation Controls =====
+function navigateTo(screenId) {
+    // Hide Home
+    document.getElementById('screen-home').style.display = 'none';
 
-    return `
-        <div class="book-card">
-            <div class="book-card-inner">
-                <div class="book-cover">${coverHtml}</div>
-                <div class="book-info">
-                    <h3 class="book-title">${book.title}</h3>
-                    <p class="book-author">${book.author || '저자 미상'}</p>
-                    <p class="book-reason">${description}</p>
-                    ${book.categoryName ? `<span class="book-highlight">${book.categoryName.split('>').pop()}</span>` : ''}
-                </div>
-            </div>
-            <div class="book-meta">
-                <span class="book-publisher">${book.publisher || ''} ${book.pubDate ? `(${book.pubDate})` : ''}</span>
-                ${book.link ? `<a href="${book.link}" target="_blank" class="book-link">자세히 보기 →</a>` : ''}
-            </div>
-        </div>
-    `;
+    // Hide all panels
+    document.querySelectorAll('.panel').forEach(p => {
+        p.classList.remove('active');
+        p.style.display = 'none';
+    });
+
+    // Show target panel
+    const panel = document.getElementById('panel-' + screenId);
+    if (panel) {
+        panel.style.display = 'flex';
+        // Add active class after a small delay for animation if needed, or just immediately
+        setTimeout(() => panel.classList.add('active'), 10);
+    }
+}
+
+function goHome() {
+    // Hide all panels
+    document.querySelectorAll('.panel').forEach(p => {
+        p.classList.remove('active');
+        p.style.display = 'none';
+    });
+
+    // Show Home
+    document.getElementById('screen-home').style.display = 'flex';
+}
+
+function goBack() {
+    goHome();
 }
