@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="동양미래대학교 도서관 AI 책 추천 큐레이터 서비스 - 당신에게 딱 맞는 책을 추천해드립니다">
+    <title>📚 책누리 - 동양미래대학교 도서관 AI 큐레이터</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="background-animation"></div>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">📚</div>
+                    <div class="logo-text">
+                        <h1>책누리</h1>
+                        <p>동양미래대학교 도서관 AI 큐레이터</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Mode Selector -->
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="recommend" id="btn-recommend">
+                    <span class="icon">✨</span>
+                    <span>맞춤 추천</span>
+                </button>
+                <button class="mode-btn" data-mode="mood" id="btn-mood">
+                    <span class="icon">💭</span>
+                    <span>기분별 추천</span>
+                </button>
+                <button class="mode-btn" data-mode="chat" id="btn-chat">
+                    <span class="icon">💬</span>
+                    <span>AI 사서와 대화</span>
+                </button>
+                <button class="mode-btn" data-mode="search" id="btn-search">
+                    <span class="icon">🔍</span>
+                    <span>도서 검색</span>
+                </button>
+            </div>
+            
+            <!-- Panel: 맞춤 추천 -->
+            <section class="panel active" id="panel-recommend">
+                <div class="glass-card">
+                    <h2 class="card-title">
+                        <span class="icon">✨</span>
+                        나에게 딱 맞는 책 찾기
+                    </h2>
+                    
+                    <div class="input-group">
+                        <label for="interests">관심 분야 또는 키워드</label>
+                        <input type="text" id="interests" class="input-field" 
+                               placeholder="예: 인공지능, 자기계발, 소설, 여행...">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="purpose">독서 목적 (선택)</label>
+                        <select id="purpose" class="select-field">
+                            <option value="">선택하세요</option>
+                            <option value="학습">학습/공부</option>
+                            <option value="취미">취미/교양</option>
+                            <option value="자기계발">자기계발</option>
+                            <option value="휴식">휴식/힐링</option>
+                            <option value="취업">취업 준비</option>
+                            <option value="전공">전공 심화</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="category">카테고리 (선택)</label>
+                        <select id="category" class="select-field">
+                            <option value="전체">전체</option>
+                            <option value="소설/시/희곡">소설/시/희곡</option>
+                            <option value="경제경영">경제경영</option>
+                            <option value="자기계발">자기계발</option>
+                            <option value="인문학">인문학</option>
+                            <option value="컴퓨터/IT">컴퓨터/IT</option>
+                            <option value="과학">과학</option>
+                            <option value="역사">역사</option>
+                            <option value="사회과학">사회과학</option>
+                            <option value="예술/대중문화">예술/대중문화</option>
+                            <option value="대학교재">대학교재</option>
+                            <option value="수험서/자격증">수험서/자격증</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-primary btn-block" id="btn-get-recommendation" onclick="getRecommendation()">
+                        <span>🎯</span>
+                        <span>맞춤 책 추천받기</span>
+                    </button>
+                </div>
+                
+                <div class="loading" id="loading-recommend">
+                    <div class="spinner"></div>
+                    <p>AI가 당신에게 딱 맞는 책을 찾고 있어요...</p>
+                </div>
+                
+                <div class="results-section" id="results-recommend"></div>
+            </section>
+            
+            <!-- Panel: 기분별 추천 -->
+            <section class="panel" id="panel-mood">
+                <div class="glass-card">
+                    <h2 class="card-title">
+                        <span class="icon">💭</span>
+                        오늘 기분은 어때요?
+                    </h2>
+                    <p class="text-secondary mb-20">지금 기분에 맞는 책을 추천해드릴게요</p>
+                    
+                    <div class="mood-grid" id="mood-grid">
+                        <div class="mood-card" data-mood="힐링" onclick="selectMood(this)">
+                            <span class="emoji">🌿</span>
+                            <span class="label">힐링이 필요해</span>
+                        </div>
+                        <div class="mood-card" data-mood="설렘" onclick="selectMood(this)">
+                            <span class="emoji">✨</span>
+                            <span class="label">설레는 기분</span>
+                        </div>
+                        <div class="mood-card" data-mood="우울" onclick="selectMood(this)">
+                            <span class="emoji">🌧️</span>
+                            <span class="label">조금 우울해</span>
+                        </div>
+                        <div class="mood-card" data-mood="호기심" onclick="selectMood(this)">
+                            <span class="emoji">🔮</span>
+                            <span class="label">뭔가 배우고 싶어</span>
+                        </div>
+                        <div class="mood-card" data-mood="지침" onclick="selectMood(this)">
+                            <span class="emoji">😴</span>
+                            <span class="label">지쳐서 쉬고 싶어</span>
+                        </div>
+                        <div class="mood-card" data-mood="성장" onclick="selectMood(this)">
+                            <span class="emoji">🚀</span>
+                            <span class="label">성장하고 싶어</span>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary btn-block" id="btn-mood-recommend" onclick="getMoodRecommendation()" disabled>
+                        <span>💡</span>
+                        <span>기분에 맞는 책 추천받기</span>
+                    </button>
+                </div>
+                
+                <div class="loading" id="loading-mood">
+                    <div class="spinner"></div>
+                    <p>당신의 마음을 읽고 있어요...</p>
+                </div>
+                
+                <div class="results-section" id="results-mood"></div>
+            </section>
+            
+            <!-- Panel: AI 사서 채팅 -->
+            <section class="panel" id="panel-chat">
+                <div class="glass-card chat-container">
+                    <h2 class="card-title">
+                        <span class="icon">💬</span>
+                        AI 사서 '책누리'와 대화하기
+                    </h2>
+                    
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="chat-message bot">
+                            <div class="message-avatar">📚</div>
+                            <div class="message-content">
+                                안녕하세요! 저는 동양미래대학교 도서관 AI 사서 <strong>책누리</strong>예요. 📖<br><br>
+                                어떤 책을 찾고 계신가요? 궁금한 점을 자유롭게 물어보세요!<br><br>
+                                <em>예시: "요즘 취업 준비하는데 도움되는 책 추천해줘", "프로그래밍 입문 책 뭐가 좋아?"</em>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chat-input" 
+                               placeholder="책에 대해 물어보세요..." 
+                               onkeypress="handleChatEnter(event)">
+                        <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">
+                            ➤
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Panel: 도서 검색 -->
+            <section class="panel" id="panel-search">
+                <div class="glass-card">
+                    <h2 class="card-title">
+                        <span class="icon">🔍</span>
+                        도서 검색
+                    </h2>
+                    
+                    <div class="category-pills" id="category-pills">
+                        <span class="category-pill active" data-category="bestseller" onclick="loadQuickList('bestseller')">🏆 베스트셀러</span>
+                        <span class="category-pill" data-category="new" onclick="loadQuickList('new')">🆕 신간 도서</span>
+                        <span class="category-pill" data-category="it" onclick="loadQuickList('it')">💻 IT/컴퓨터</span>
+                        <span class="category-pill" data-category="selfhelp" onclick="loadQuickList('selfhelp')">📈 자기계발</span>
+                        <span class="category-pill" data-category="novel" onclick="loadQuickList('novel')">📖 소설</span>
+                    </div>
+                    
+                    <div class="input-group">
+                        <div style="display: flex; gap: 12px;">
+                            <input type="text" id="search-query" class="input-field" 
+                                   placeholder="도서 제목, 저자, 키워드로 검색..." 
+                                   style="flex: 1;"
+                                   onkeypress="handleSearchEnter(event)">
+                            <button class="btn btn-primary" onclick="searchBooks()">
+                                <span>검색</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="loading" id="loading-search">
+                    <div class="spinner"></div>
+                    <p>도서를 검색하고 있어요...</p>
+                </div>
+                
+                <div class="search-results" id="results-search"></div>
+            </section>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2024 동양미래대학교 도서관 | Powered by <a href="https://ai.google.dev/" target="_blank">Gemini AI</a> & <a href="https://www.aladin.co.kr/" target="_blank">알라딘</a></p>
+        </footer>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
