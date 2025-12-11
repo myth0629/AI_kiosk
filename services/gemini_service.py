@@ -22,7 +22,8 @@ class ChatGPTService:
     def get_book_recommendation(self, user_interests: str, 
                                  available_books: list,
                                  mood: str = "",
-                                 purpose: str = "") -> dict:
+                                 purpose: str = "",
+                                 department: str = "") -> dict:
         """
         사용자 관심사와 분위기에 맞는 도서 추천
         
@@ -31,6 +32,7 @@ class ChatGPTService:
             available_books: 추천 대상 도서 목록
             mood: 현재 기분/분위기 (선택)
             purpose: 독서 목적 (선택)
+            department: 사용자 학과/전공 (선택)
         
         Returns:
             추천 결과 딕셔너리
@@ -42,6 +44,7 @@ class ChatGPTService:
 
 ## 사용자 정보
 - 관심사/키워드: {user_interests}
+{f"- 학과/전공: {department}" if department else ""}
 {f"- 현재 기분: {mood}" if mood else ""}
 {f"- 독서 목적: {purpose}" if purpose else ""}
 

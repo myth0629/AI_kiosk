@@ -65,10 +65,11 @@ function initScreensaver() {
 async function getRecommendation() {
     const interests = document.getElementById('interests').value.trim();
     const purpose = document.getElementById('purpose').value;
-    const category = ''; // Removed category select for simplicity as per UI
+    const department = document.getElementById('department').value;
+    const category = '';
 
-    if (!interests) {
-        alert('관심 분야 또는 키워드를 입력해주세요!');
+    if (!interests && !department) {
+        alert('관심 분야를 입력하거나 학과를 선택해주세요!');
         return;
     }
 
@@ -78,7 +79,7 @@ async function getRecommendation() {
         const response = await fetch('/api/recommend', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ interests, purpose })
+            body: JSON.stringify({ interests, purpose, department })
         });
 
         const data = await response.json();

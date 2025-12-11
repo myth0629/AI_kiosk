@@ -113,14 +113,18 @@ def get_recommendations():
     interests = data.get('interests', '')
     mood = data.get('mood', '')
     purpose = data.get('purpose', '')
+    department = data.get('department', '')
     category = data.get('category', '전체')
     
-    if not interests:
-        return jsonify({"error": "관심사를 입력해주세요."}), 400
+    if not interests and not department:
+        return jsonify({"error": "관심사 또는 학과를 입력해주세요."}), 400
+    
+    # 검색 키워드 설정 (관심사가 없으면 학과로 검색)
+    search_query = interests if interests else f"{department} 전공"
     
     # 관심사 기반으로 도서 검색
     category_id = CATEGORY_MAP.get(category, 0)
-    search_result = aladin.search_books(interests, "Keyword", 20, category_id=category_id)
+    search_result = aladin.search_books(search_query, "Keyword", 20, category_id=category_id)
     
     books = search_result.get('item', [])
     
@@ -132,7 +136,7 @@ def get_recommendations():
         })
     
     # Gemini로 추천 생성
-    recommendation = chatgpt.get_book_recommendation(interests, books, mood, purpose)
+    recommendation = chatgpt.get_book_recommendation(interests, books, mood, purpose, department)
     
     # 추천된 책 정보에 상세 정보 추가
     if 'recommendations' in recommendation:
