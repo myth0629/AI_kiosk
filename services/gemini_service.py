@@ -1,23 +1,23 @@
 """
-Gemini API 서비스
+ChatGPT API 서비스
 AI 기반 도서 추천 및 큐레이션 기능 제공
 """
 
 import os
-import google.generativeai as genai
+from openai import OpenAI
 from typing import Optional
 
 
-class GeminiService:
-    """Gemini AI를 통한 도서 추천 서비스"""
+class ChatGPTService:
+    """ChatGPT(OpenAI)를 통한 도서 추천 서비스"""
     
     def __init__(self, api_key: Optional[str] = None):
-        self._api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self._api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not self._api_key:
-            raise ValueError("Gemini API 키가 설정되지 않았습니다.")
+            raise ValueError("OpenAI API 키가 설정되지 않았습니다.")
         
-        genai.configure(api_key=self._api_key)
-        self._model = genai.GenerativeModel("gemini-1.5-flash")
+        self.client = OpenAI(api_key=self._api_key)
+        self.model_name = "gpt-4o-mini"
     
     def get_book_recommendation(self, user_interests: str, 
                                  available_books: list,
@@ -67,8 +67,12 @@ class GeminiService:
 """
         
         try:
-            response = self._model.generate_content(prompt)
-            result_text = response.text
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"}
+            )
+            result_text = response.choices[0].message.content
             
             # JSON 추출 시도
             import json
@@ -132,8 +136,12 @@ class GeminiService:
 """
         
         try:
-            response = self._model.generate_content(prompt)
-            result_text = response.text
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"}
+            )
+            result_text = response.choices[0].message.content
             
             import json
             import re
@@ -207,8 +215,12 @@ JSON 형식으로만 응답하세요.
 """
         
         try:
-            response = self._model.generate_content(prompt)
-            result_text = response.text
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"}
+            )
+            result_text = response.choices[0].message.content
             
             import json
             import re

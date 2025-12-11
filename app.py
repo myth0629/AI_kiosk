@@ -8,7 +8,7 @@ from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 
 from services.aladin_service import AladinService, CATEGORY_MAP
-from services.gemini_service import GeminiService
+from services.gemini_service import ChatGPTService
 
 # 환경변수 로드
 load_dotenv()
@@ -18,7 +18,7 @@ app.config['JSON_AS_ASCII'] = False
 
 # 서비스 인스턴스 (지연 초기화)
 _aladin_service = None
-_gemini_service = None
+_chatgpt_service = None
 
 
 def get_aladin_service():
@@ -32,15 +32,15 @@ def get_aladin_service():
     return _aladin_service
 
 
-def get_gemini_service():
-    """Gemini 서비스 인스턴스 반환"""
-    global _gemini_service
-    if _gemini_service is None:
+def get_chatgpt_service():
+    """ChatGPT 서비스 인스턴스 반환"""
+    global _chatgpt_service
+    if _chatgpt_service is None:
         try:
-            _gemini_service = GeminiService()
+            _chatgpt_service = ChatGPTService()
         except ValueError as e:
             return None
-    return _gemini_service
+    return _chatgpt_service
 
 
 @app.route('/')
@@ -101,12 +101,12 @@ def get_new_releases():
 def get_recommendations():
     """AI 도서 추천 API"""
     aladin = get_aladin_service()
-    gemini = get_gemini_service()
+    chatgpt = get_chatgpt_service()
     
     if not aladin:
         return jsonify({"error": "알라딘 API 키가 설정되지 않았습니다."}), 500
-    if not gemini:
-        return jsonify({"error": "Gemini API 키가 설정되지 않았습니다."}), 500
+    if not chatgpt:
+        return jsonify({"error": "OpenAI API 키가 설정되지 않았습니다."}), 500
     
     data = request.get_json()
     
@@ -132,7 +132,7 @@ def get_recommendations():
         })
     
     # Gemini로 추천 생성
-    recommendation = gemini.get_book_recommendation(interests, books, mood, purpose)
+    recommendation = chatgpt.get_book_recommendation(interests, books, mood, purpose)
     
     # 추천된 책 정보에 상세 정보 추가
     if 'recommendations' in recommendation:
@@ -153,12 +153,12 @@ def get_recommendations():
 def get_mood_recommendations():
     """기분 기반 도서 추천 API"""
     aladin = get_aladin_service()
-    gemini = get_gemini_service()
+    chatgpt = get_chatgpt_service()
     
     if not aladin:
         return jsonify({"error": "알라딘 API 키가 설정되지 않았습니다."}), 500
-    if not gemini:
-        return jsonify({"error": "Gemini API 키가 설정되지 않았습니다."}), 500
+    if not chatgpt:
+        return jsonify({"error": "OpenAI API 키가 설정되지 않았습니다."}), 500
     
     data = request.get_json()
     mood = data.get('mood', '')
@@ -185,7 +185,7 @@ def get_mood_recommendations():
         bestseller_result = aladin.get_bestsellers(max_results=15)
         books = bestseller_result.get('item', [])
     
-    recommendation = gemini.get_mood_based_recommendation(mood, books)
+    recommendation = chatgpt.get_mood_based_recommendation(mood, books)
     
     # 추천된 책 정보에 상세 정보 추가
     if 'recommendations' in recommendation:
@@ -204,12 +204,12 @@ def get_mood_recommendations():
 def chat_recommendation():
     """챗봇 형태의 자유 질문 추천 API"""
     aladin = get_aladin_service()
-    gemini = get_gemini_service()
+    chatgpt = get_chatgpt_service()
     
     if not aladin:
         return jsonify({"error": "알라딘 API 키가 설정되지 않았습니다."}), 500
-    if not gemini:
-        return jsonify({"error": "Gemini API 키가 설정되지 않았습니다."}), 500
+    if not chatgpt:
+        return jsonify({"error": "OpenAI API 키가 설정되지 않았습니다."}), 500
     
     data = request.get_json()
     query = data.get('query', '')
@@ -226,7 +226,7 @@ def chat_recommendation():
         bestseller_result = aladin.get_bestsellers(max_results=15)
         books = bestseller_result.get('item', [])
     
-    recommendation = gemini.get_custom_recommendation(query, books)
+    recommendation = chatgpt.get_custom_recommendation(query, books)
     
     # 추천된 책 정보에 상세 정보 추가
     if 'recommendations' in recommendation:
@@ -251,9 +251,9 @@ if __name__ == '__main__':
     print("=" * 50)
     print("📚 동양미래대학교 도서관 책 추천 큐레이터 서비스")
     print("=" * 50)
-    print("\n서버 시작: http://localhost:5000")
+    print("\n서버 시작: http://localhost:5001")
     print("\n⚠️  .env 파일에 API 키를 설정해주세요:")
     print("   - ALADIN_API_KEY: 알라딘 TTB 키")
-    print("   - GEMINI_API_KEY: Google Gemini API 키\n")
+    print("   - OPENAI_API_KEY: OpenAI API 키\n")
     
     app.run(debug=True, host='0.0.0.0', port=5001)
