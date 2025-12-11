@@ -18,6 +18,14 @@
 
 <body oncontextmenu="return false" onselectstart="return false" ondragstart="return false">
 
+    <!-- Screensaver Overlay -->
+    <div id="screensaver" class="screensaver">
+        <video id="screensaver-video" class="screensaver-video" loop muted>
+            <source src="{{ url_for('static', filename='videos/screensaver.mp4') }}" type="video/mp4">
+        </video>
+        <div class="screensaver-message">화면을 터치하여 시작하세요</div>
+    </div>
+
     <div class="kiosk-container">
         <div class="bg-glow"></div>
 

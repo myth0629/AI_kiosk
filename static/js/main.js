@@ -5,13 +5,61 @@
 
 // ===== 전역 변수 =====
 let selectedMood = null;
+let idleTimer = null;
+const IDLE_TIMEOUT = 30000; // 30초 (밀리초)
 
 // ===== 초기화 =====
 document.addEventListener('DOMContentLoaded', function () {
-    // initParticles(); // Removing particles for now as they might conflict with new design or add back if needed
-    // initModeSelector(); // Removed mode selector
     loadQuickList('bestseller');
+    initScreensaver();
 });
+
+// ===== 화면보호기 =====
+function initScreensaver() {
+    const screensaver = document.getElementById('screensaver');
+    const video = document.getElementById('screensaver-video');
+
+    // 화면보호기 표시
+    function showScreensaver() {
+        if (!screensaver.classList.contains('active')) {
+            screensaver.classList.add('active');
+            video.currentTime = 0;
+            video.play().catch(e => console.log("Video play failed:", e));
+        }
+    }
+
+    // 화면보호기 숨기기
+    function hideScreensaver() {
+        if (screensaver.classList.contains('active')) {
+            screensaver.classList.remove('active');
+            video.pause();
+            // 홈으로 돌아가기 (선택 사항: 오랫동안 사용 안했으면 홈으로 리셋하는 것이 일반적)
+            goHome();
+        }
+    }
+
+    // 타이머 리셋
+    function resetIdleTimer() {
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(showScreensaver, IDLE_TIMEOUT);
+    }
+
+    // 사용자 활동 감지 이벤트
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+
+    events.forEach(event => {
+        document.addEventListener(event, () => {
+            // 화면보호기가 켜져있으면 끄기, 아니면 타이머만 리셋
+            if (screensaver.classList.contains('active')) {
+                hideScreensaver();
+            }
+            resetIdleTimer();
+        }, true);
+    });
+
+    // 초기 타이머 시작
+    resetIdleTimer();
+}
 
 // ===== 맞춤 추천 =====
 async function getRecommendation() {
